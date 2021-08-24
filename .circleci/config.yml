@@ -1,0 +1,127 @@
+version: 2.1
+
+
+jobs:
+# Testing on feature branches
+  testFeatureBranchesFront:
+    resource_class: medium
+    docker:
+      - image: docker:18.06.3-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build react application Docker test image
+          command: |
+            docker build -t complex_ci_git_actions/front-test -f ./front/Dockerfile.dev ./front
+ 
+  testFeatureBranchesBack:
+      resource_class: medium
+      docker:
+        - image: docker:18.06.3-ce-git
+      steps:
+        - checkout
+        - setup_remote_docker
+        - run:
+            name: Build Spaus Express api Docker test image
+            command: |
+              docker build -t complex_ci_git_actions/back-test -f ./back/Dockerfile.dev ./back
+
+  testFeatureBranchesNginx:
+      resource_class: medium
+      docker:
+        - image: docker:18.06.3-ce-git
+      steps:
+        - checkout
+        - setup_remote_docker
+        - run:
+            name: Build nginx Docker test image
+            command: |
+              docker build -t complex_ci_git_actions/nginx-test -f ./nginx/Dockerfile.dev ./nginx
+
+
+
+  testMainFront:
+    resource_class: medium
+    docker:
+      - image: docker:18.06.3-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build react application Docker production image on Main branch
+          command: |
+            docker build -t complex_ci_git_actions/front -f ./front/Dockerfile.dev ./front
+ 
+  testMainBack:
+      resource_class: medium
+      docker:
+        - image: docker:18.06.3-ce-git
+      steps:
+        - checkout
+        - setup_remote_docker
+        - run:
+            name: Build Spaus Express api Docker production image on Main branch
+            command: |
+              docker build -t complex_ci_git_actions/back -f ./back/Dockerfile.dev ./back
+
+  testMainNginx:
+      resource_class: medium
+      docker:
+        - image: docker:18.06.3-ce-git
+      steps:
+        - checkout
+        - setup_remote_docker
+        - run:
+            name: Build nginx Docker prodution image on Main branch
+            command: |
+              docker build -t complex_ci_git_actions/nginx -f ./nginx/Dockerfile.dev ./nginx
+
+
+
+
+workflows:
+  version: 2
+  build_test_feature:
+    jobs:
+      - testFeatureBranchesNginx:
+          requires:
+            - testFeatureBranchesFront
+            - testFeatureBranchesBack
+          filters:
+            branches:
+              ignore:
+                - main
+                - master
+      - testFeatureBranchesFront:
+          filters:
+            branches:
+              ignore:
+                - main
+                - master
+      - testFeatureBranchesBack:
+          filters:
+            branches:
+              ignore:
+                - main
+                - master
+  build_test_main:
+    jobs:
+      - testMainFront:
+          filters:
+            branches:
+              only:
+                - main
+                - master
+      - testMainBack:
+          filters:
+            branches:
+              only:
+                - main
+                - master
+      - testMainNginx:
+          filters:
+            branches:
+              only:
+                - main
+                - master

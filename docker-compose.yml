@@ -1,0 +1,30 @@
+version: "3"
+services: 
+  nginx-main: 
+    build: 
+      context: ./nginx
+      dockerfile: Dockerfile.dev
+    ports: 
+      - "8080:80"
+    restart: always
+    depends_on: 
+      - front
+      - back
+    links:
+      - front
+      - back
+  back:
+    build: 
+      context: ./back
+      dockerfile: Dockerfile.dev
+    volumes: 
+      - /app/node_modules
+      - ./back:/app
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile.dev
+    volumes: 
+      - /app/node_modules
+      #  This is used because nginx overwrites react in the container
+      - ./front/dist:/usr/share/nginx/html
